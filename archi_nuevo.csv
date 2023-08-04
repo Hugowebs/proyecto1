@@ -1,0 +1,44 @@
+from fastapi import FastAPI
+import pandas as pd
+
+app = FastAPI()
+
+# Cargar el DataFrame desde el archivo CSV
+df = pd.read_csv('archivo_nuevo.csv')
+
+def get_filtered_df(year: str):
+    return df[df['realease_date'].str.startswith(year)]
+
+@app.get('/genero/')
+def genero(Año: str):
+    filtered_df = get_filtered_df(Año)
+    genres_counts = filtered_df['genres'].value_counts().nlargest(5)
+    return genres_counts.to_dict()
+
+@app.get('/juegos/')
+def juegos(Año: str):
+    filtered_df = get_filtered_df(Año)
+    return filtered_df['app_name'].tolist()
+
+@app.get('/specs/')
+def specs(Año: str):
+    filtered_df = get_filtered_df(Año)
+    specs_counts = filtered_df['specs'].value_counts().nlargest(5)
+    return specs_counts.to_dict()
+
+@app.get('/earlyacces/')
+def earlyacces(Año: str):
+    filtered_df = get_filtered_df(Año)
+    return len(filtered_df[filtered_df['early_access'] == True])
+
+@app.get('/sentiment/')
+def sentiment(Año: str):
+    filtered_df = get_filtered_df(Año)
+    sentiment_counts = filtered_df['sentiment'].value_counts()
+    return sentiment_counts.to_dict()
+
+@app.get('/metascore/')
+def metascore(Año: str):
+    filtered_df = get_filtered_df(Año)
+    top_5_metascore = filtered_df.nlargest(5, 'metascore')[['app_name', 'metascore']]
+    return top_5_metascore.to_dict(orient='records')
